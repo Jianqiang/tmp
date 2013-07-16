@@ -172,15 +172,23 @@ def pos_vec_profiling(WordPOS2Freq, L_word, L_tag):
 
 
     vec_profile=''
+
+    if len(vec1)!=34:
+      print('@Warning@')
+      print(len(vec1))
+
     for num in vec1:
       vec_profile=vec_profile+str(num)
 
-      if vec_profile in Vec2Word:
-        Vec2Word[vec_profile].append(i)
+    if vec_profile in Vec2Word:
+      Vec2Word[vec_profile].append(i)
 
-      else:
-        d_list=[i]
-        Vec2Word[vec_profile]=d_list
+    else:
+      d_list=[]
+      d_list.append(i)
+      Vec2Word[vec_profile]=d_list
+
+    
     
     
         
@@ -198,9 +206,65 @@ def pos_vec_profiling(WordPOS2Freq, L_word, L_tag):
     #print('===')
 
 
-
+  print('\nNum of unique pos-vectors:')
   print(len(Vec2Word.items()))
-  print(list(Vec2Word.items())[0])
+  #print(list(Vec2Word.items())[0])
+  #print(len(list(Vec2Word.items())[0][1]))
+
+  items=list(Vec2Word.items())
+  for item in items:
+    #print(item[0])
+    x=L_tag
+    y=item[0]
+    z=[bool(int(y[i]))*x[i] for i in range(len(x))]
+    for pos in z:
+      if pos!='':
+        print(pos, end=' ')
+    print('==>num of words:',len(item[1]))
+
+    for j in item[1][:min(20,len(item[1]))]:  #sample at most 20 words for each category
+      print(j,  end='  ')
+    print(' ')
+    print('===')
+
+
+  print('repeat ',end='')
+  print('Num of unique pos-vectors:')
+  print(len(Vec2Word.items()))
+
+
+  print('\nOutput unredundant pos-vector repres. matrix to m0.txt')
+
+  p='../working_data/m0.txt'
+  f=codecs.open(p,'w','utf-8')
+  
+  for i in L_tag:
+    f.write(str(i)+'  ')
+
+  f.write('\n')
+
+  for i in items:
+    for j in i[0]:
+      f.write(str(j)+'  ')
+    f.write('\n')
+    
+  
+  #print('\n\n')
+  #for x in L_tag:
+    #print(x,end=' ')
+  #print('\n')
+
+  #for i in Vec2Word:
+
+    #signal=[bool(j) for j in i]
+    #print(len(signal))
+
+    #print(len(L_word))
+    #print(i)
+    #out=[signal[j]*L_word[j] for j in range(len(L_word))]
+
+    #print(out)
+    
 
 
   
