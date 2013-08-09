@@ -212,6 +212,9 @@ def pos_vec_profiling(WordPOS2Freq, L_word, L_tag):
   #print(len(list(Vec2Word.items())[0][1]))
 
   items=list(Vec2Word.items())
+
+  items=sorted(items, key=lambda x:len(x[1]), reverse=True) #sort by num of words in the category
+  
   for item in items:
     #print(item[0])
     x=L_tag
@@ -233,7 +236,39 @@ def pos_vec_profiling(WordPOS2Freq, L_word, L_tag):
   print(len(Vec2Word.items()))
 
 
-  print('\nOutput unredundant pos-vector repres. matrix to m0.txt')
+  #
+  # write the complete list of each category to file pos_vec.txt
+  #
+
+  print('\n\n>>Write the complete list of each category to file pos_vec.txt')
+  p='../working_data/pos_vec.txt'
+  f=codecs.open(p,'w','utf-8')
+  for item in items:
+    #print(item[0])
+    x=L_tag
+    y=item[0]
+    z=[bool(int(y[i]))*x[i] for i in range(len(x))]
+    for pos in z:
+      if pos!='':
+        f.write(pos+' ')
+    f.write('==>num of words:'+str(len(item[1]))+'\n')
+
+    for j in item[1]:  #sample at most 20 words for each category
+      f.write(j+'  ')
+    f.write('\n')
+    f.write('=###repeat of pos vec of above words:')
+    for pos in z:
+      if pos!='':
+        f.write(pos+' ')  
+    f.write('\n\n\n')
+
+  f.close()
+
+  
+
+  #
+  #
+  print('\n\n>>Output unredundant pos-vector repres. matrix to m0.txt')
 
   p='../working_data/m0.txt'
   f=codecs.open(p,'w','utf-8')
@@ -242,6 +277,9 @@ def pos_vec_profiling(WordPOS2Freq, L_word, L_tag):
     f.write(str(i)+'  ')
 
   f.write('\n')
+
+
+  
 
   for i in items:
     for j in i[0]:
