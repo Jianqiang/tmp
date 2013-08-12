@@ -138,9 +138,18 @@ def pre_proc(tokens):
 print ('\n>>> Pre-processing of the tree/word-structure annotation','to make all the tags in the form of X_subscript,to comply with NLTK Tree format')
 print ('@@@requirs two arguments 1:path_to_annotation; 2: path_to_result')
 
-path=sys.argv[1]
-path2=sys.argv[2]
 
+
+if len(sys.argv)>2:
+  path2=sys.argv[2]
+  path=sys.argv[1]
+else:
+  path2='../working_data/annotation_nltk.data'
+
+  if len(sys.argv)>1:
+    path=sys.argv[1]
+  else:
+    path='../working_data/word-structures_copy.txt'
 
 f=codecs.open(path, 'rU', 'utf-8')
 
