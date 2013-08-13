@@ -70,6 +70,7 @@ import re
 import sys
 import codecs
 from nltk import Tree
+from nltk import ImmutableParentedTree
 
 
 pattern=re.compile('([A-Z]+)_([a-z]+)') # the pattern of tree nodes (tags), compiled, as will be called repeatedly
@@ -109,7 +110,7 @@ def get_head_children(C):  # C is a tree/subtree
     return head_children
 
 # 
-# ---> start the main procedure <--------#
+# -------------------> start the main procedure <------------------#
 #
 
 p1='../working_data/word2newtag.pickle'
@@ -167,11 +168,17 @@ not_covered=0 #those annotation, the words of which have not occurred in our cor
 Symbols=set()
 Symbols2=set()
 
+OOV=set()
+           #
+Forest=[]  # list of parsed trees, an output of this program
+           #
+            
+
 for sent in Annotation:
 
   S=[] # S is the stack for tree node visit
   
-  tree=Tree(sent)  #using NLTK.Tree data structure, representing the tree
+  tree=ImmutableParentedTree(sent)  #using NLTK.Tree data structure, representing the tree
 
 
   #
@@ -188,6 +195,8 @@ for sent in Annotation:
   #If the word has occurred in the corpus...
   
   if string in Vec:
+
+    Forest.append(tree)
 
     
 
@@ -243,6 +252,7 @@ for sent in Annotation:
   else:
     #print('word ',string, 'has not occurred in the corpus')
     not_covered +=1
+    OOV.add(string)
     pass
 
 
@@ -254,8 +264,11 @@ print('\n>>Result of the Vec:')
 
 print('Num of entries in Vec=',len(Vec))
 print('Num of entries in Word2NewTag=',len(Word2NewTag))
+print('Num of words in Annotation=', len(Annotation))
 
+print('Num of words not in our corpus=',not_covered)
 print('Non-coverage rate=',not_covered/len(Annotation))
+
 
 '''
 for i in Vec:
@@ -264,14 +277,54 @@ for i in Vec:
 '''
 
 
-print('\nFor those words that have occurred in the corpus, the covrage of all the subwords/characters after update is:')
+print('\nFor those words that have occurred in the corpus, the covrage of all the subwords/characters after update is:', end=' ')
 print(len(Symbols)/len(Symbols2))
 
-diff=Symbols2.difference(Symbols)
+#diff=Symbols2.difference(Symbols)
+#for i in diff:
+  #print(i)
+
 
 diff2=Symbols2.difference(set(Vec.keys()))
 
-print('coverage2=', (len(Symbols2)-len(diff2))/len(Symbols2))
 
-#for i in diff:
-  #print(i)
+
+print('\nCoverage for all the subtrees =', (len(Symbols2)-len(diff2))/len(Symbols2))
+
+#print('\n\n>>>##Printing out OOVs...')
+#for i in OOV:
+#    print(i)
+print('\nOOV rate of the annotation w.r.t. vocabulary extracted from corpus:', len(OOV)/len(Annotation))
+
+
+print('\nSubtrees that have no tag-update:')
+unicount=0
+for i in diff2:
+    if len(i)==1:
+        unicount +=1
+        #print (i)
+print('unanalyzed single-character count=',unicount, '  % is ',unicount/len(diff2))
+
+
+###########Output 1: tree representation of the annotation
+
+p_tree='../working_data/annotated_trees.list.pickle'
+
+print('\n\n>>>Store the tree representations of the annotation in ',p_tree)
+
+f_tree=open(p_tree,'wb')
+pickle.dump(Forest, f_tree)
+f_tree.close()
+
+
+#######Output 2: Vec hashtable, which keeps a mapping from string(char/word/subword) to their tag
+p_vec='../working_data/string2tag.hash.pickle'
+print('\n\n>>>Store the Vec hashtable, which keeps a mapping from string(char/word/subword) to their tag to file ',p_vec)
+
+f_vec=open(p_vec, 'wb')
+pickle.dump(Vec, f_vec)
+f_vec.close()
+
+
+      
+
