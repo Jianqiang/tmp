@@ -22,7 +22,7 @@ InduceRightNode     # if tree.left_sibling and not(tree.right_sibling())
 
 
 key: known node, <X, R>, <X,L> and  for above 2 hashtable, respectively
-value: list of actual tag for the pseudo-unknown node (i.e. L,R,for the above three tables, respectively
+value: list of actual tag () for the pseudo-unknown node (i.e. L,R,for the above three tables, respectively
 
 Algorithm Sketch:
 
@@ -36,10 +36,12 @@ process the annotated tree:
             update 2 hash tables.
 
      for each non-head children C
-            copy the old_tags
+            do nothing
   
 
 batch processing: pass the each hashtable, re-set the value to x, which is the element has max count in the original value (list)
+
+---->note, this is a "max" version of implementaiton, we could also do "union" version
 
 
 2nd pass:
@@ -60,7 +62,7 @@ process the annotated tree:
 
 
 
-see how successful it is......
+BTW, also maintain a NewVec hashtable, to record string-->set of vector mapping of the updated items
 
 '''
 
@@ -77,6 +79,13 @@ import pickle
 from nltk import Tree
 from nltk import ImmutableParentedTree
 from nltk import ParentedTree
+
+import codecs
+
+
+print('\n>>>Running re_propagation.py, 2nd-order similarity based tag propagation for word structure annotation...')
+print('Argv: 1. path_to_annotated tree, 2. path to Vec hashtable(string-->tag), 3.output: final_annotation. All using default value by now!')
+
 
 
 pattern=re.compile('([A-Z]+)_([a-z]+)') # the pattern of tree nodes (tags), compiled, as will be called repeatedly
@@ -115,12 +124,33 @@ f.close()
 #
 
 # convert a set of item to a single str representation
+# 
+# ----->!!! warning: this peace of code makes assumptions about tagset(no 'Z' occurs in a tag name)
 def set2str(d_set):
-  new_list=[]
-  new_list.extend(d_set)
+  new_list=list(d_set)
+  #new_list.extend(d_set)
   new_list.sort()
 
-  return ''.join(new_list)  #might cause ambiguity in theory, but works OK with CTB tag set.
+  return 'Z'.join(new_list)  #might cause ambiguity in theory, but works OK with CTB tag set.
+
+
+#pattern_str2set=re.compile(('[A-Y]'))
+def str2set(d_str):
+  d_set=set()
+  S=''
+  for item in d_str:
+    if item=='Z':
+      d_set.add(S)
+      S=''
+
+    else:
+      S=S+item
+
+  if S:
+    d_set.add(str(S))
+
+  return d_set  
+    
 
 
 
@@ -190,7 +220,6 @@ class Hash_list_value:
 
 
 
-
 ##################### Core Code Starts Here ######################
 
 
@@ -206,8 +235,12 @@ NewForest=[] # keep updated trees
  
 
 
+###################### first pass below ##################################
+
+
 #
-# 1st pass processing to update InduceLeftNode and InduceRightNode hashtables.
+# 1st pass processing to  1. update the tree node label to set2str({possible tag associated with the leaves/strings}), i.e. concatenation of sorted possible tags for the string
+#                         2. update InduceLeftNode and InduceRightNode hashtables.
 #
 
 count=0
@@ -232,15 +265,13 @@ for tree in Forest:
 
       tag, subscript= decompose_tag(subtree.node)
 
-      match=pattern.match(subtree.node)
-
       tag_vec_str=set2str(Vec[string]) #get the tag-set of the node according to the leaves and convert it to str
 
       subtree.node=tag_vec_str+'_'+subscript  #update the node with the new_tag
 
-      #print('\n')
-      #print(subtree.node, ''.join(subtree.leaves()))
 
+  NewForest.append(new_tree)
+  
 
   for subtree in new_tree.subtrees(lambda x: len(x)>1 and ''.join(x.leaves()) in Vec ):  # extraction known production rules
 
@@ -280,15 +311,180 @@ print(len(InduceLeftNode.table))
 print(len(InduceRightNode.table))
 
 x=InduceLeftNode.table.values()
-y=set()
 
-for i in x:
-  for j in i:
-    y.add(j)
+distinct_count=0
+for known in InduceLeftNode.table:
+  unknown=InduceLeftNode.table[known]
+  d_set=set(unknown)
+  distinct_count=distinct_count+len(d_set)
+
+print('\nOn average, there are ',distinct_count/len(InduceLeftNode.table), 'entries for each rule-guessing...')
+
+
+#y=set()
+#for i in x:
+  #for j in i:
+    #y.add(j)
   
   
-z=list(y)
-zz=sorted(z, key=lambda item:len(item))
-for i in zz:
-  print(i)
+#z=list(y)
+#zz=sorted(z, key=lambda item:len(item))
+#for i in zz:
+  #print(i)
+      
+
+
+
+
+#
+# pass the each hashtable, re-set the value to x, which is the element has max count in the original value (list)
+#
+max_LeftNode=InduceLeftNode.compute_max_hash()
+max_RightNode=InduceRightNode.compute_max_hash()
+
+
+
+
+#items=list(max_LeftNode.items())
+#for i in items[:10]:
+  #print(i, set(InduceLeftNode.table[i[0]]))
+
+
+
+
+
+############################  2nd pass below   #################################
+
+
+
+
+#
+# 2nd-pass over the trees, conduct top-down similarity (or 'match' to be more exact) based tag propagation.
+#                          note: we use concatenation of sorted list of possible tags (via tag2str) as the single tag for each string(word/subword)'s covering node
+#
+
+print('\n\n>>>Starting 2nd pass of tag propagation...')
+
+
+
+NewVec={}  #new Vec for those updated via second-pass tag propagation...
+
+
+L_fail=list()  # Record failed cases
+R_fail=list()  #
+
+success_count=0
+
+total_str=set()
+
+for tree in NewForest:
+
+  for subtree in tree.subtrees():
+  #for subtree in tree.subtrees(lambda x: x.height()<tree.height()):  #do not check the tree itself.
+
+    string=''.join(subtree.leaves())
+
+    total_str.add(string)
+
+    if not string in Vec:
+
+      tag, subscript= decompose_tag(subtree.node)
+
+
+      if string in NewVec:  #if it has already been updated in previous trees
+
+        success_count=success_count+1
+        tag_vec_str=set2str(NewVec[string])
+        
+        subtree.node=tag_vec_str+'_'+subscript  #update tag for the node
+
+
+      else: # this the string corresponds to this node is unknown...
+        
+
+        parent=subtree.parent()
+
+        if subtree.left_sibling():
+          l_tag, l_sub=decompose_tag(subtree.left_sibling().node)
+          key=parent.node+'-'+l_tag
+
+          if key in max_RightNode:
+
+            success_count +=1
+
+            new_tag=max_RightNode[key]
+            
+            subtree.node=new_tag +'_'+subscript #update tag for the node
+
+            NewVec[string]=str2set(new_tag) #update NewVec
+
+          else:
+
+            R_fail.append(subtree)
+
+
+        elif subtree.right_sibling():
+          
+          r_tag, r_sub=decompose_tag(subtree.right_sibling().node)
+
+          key=parent.node+'-'+r_tag
+
+          if key in max_LeftNode:
+            
+            success_count +=1
+
+            new_tag= max_LeftNode[key]
+
+            subtree.node=new_tag+'_'+subscript #update tag for the node
+
+            NewVec[string]=str2set(new_tag)
+
+          else:
+            L_fail.append(subtree)
+
+
+        else:
+          print('Error! The tree has no sibling! not supposed to occur! Program Exist')
+          break
+        
+
+
+print('\n2nd pass analytics:')
+print ('successful update:', success_count)
+print('failed update:', len(L_fail)+len(R_fail))
+print('NewVec(string-->tag) hash entry nr',len(NewVec))
+
+UpdatedVec=dict(list(Vec.items()) + list(NewVec.items()))
+
+known=set(UpdatedVec.keys())
+unknown=total_str.difference(known)
+
+
+print('\n(estimation 1) Overal coverage w.r.t. to all word/subword/char is:', 1-len(unknown)/len(total_str))      
+print('(est 2) Overal coverage w.r.t. to all word/subword/char is:', len(UpdatedVec)/len(total_str))
+print('uknown subword/word/char nr=', len(unknown)) 
+
+
+path='../working_data/new_annotation.txt'
+path2='../working_data/new_annotation.pickle'
+
+print('\nWritting the new annotation to file', path)
+
+f=codecs.open(path,'w','utf-8')
+for tree in NewForest:
+  f.write(tree.pprint(margin=10000)+'\n')
+print('writting done!')
+f.close()
+
+print('\nStroing this new annotation (in tree format) via pickle, to ', path2)
+f=open(path2, 'wb')
+pickle.dump(NewForest, f)
+f.close()
+print('done!')
+
+
+p3='../working_data/updated_Vec.pickle'
+print('\nStoring the update Vec hashtable (string-->set of tags) to ')
+        
+        
       
