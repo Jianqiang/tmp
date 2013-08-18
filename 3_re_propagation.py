@@ -484,7 +484,7 @@ print('done!')
 
 
 p3='../working_data/updated_Vec.pickle'
-print('\nStoring the update Vec hashtable (string-->set of tags) to ')
+print('\nStoring the update Vec hashtable (string-->set of tags) to ',p3)
         
         
       
