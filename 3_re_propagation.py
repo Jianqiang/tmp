@@ -73,14 +73,18 @@ BTW, also maintain a NewVec hashtable, to record string-->set of vector mapping 
 #
 
 
-
+import codecs
 import re
 import pickle
 from nltk import Tree
 from nltk import ImmutableParentedTree
 from nltk import ParentedTree
 
-import codecs
+from utility_proj import set2str
+from utility_proj import str2set
+from utility_proj import pattern
+from utility_proj import decompose_tag
+
 
 
 print('\n>>>Running re_propagation.py, 2nd-order similarity based tag propagation for word structure annotation...')
@@ -88,7 +92,7 @@ print('Argv: 1. path_to_annotated tree, 2. path to Vec hashtable(string-->tag), 
 
 
 
-pattern=re.compile('([A-Z]+)_([a-z]+)') # the pattern of tree nodes (tags), compiled, as will be called repeatedly
+#pattern=re.compile('([A-Z]+)_([a-z]+)') # the pattern of tree nodes (tags), compiled, as will be called repeatedly
 
 
 
@@ -117,63 +121,6 @@ Vec=pickle.load(f)
 print('done.')
 f.close()
 
-
-
-#
-# utilities
-#
-
-# convert a set of item to a single str representation
-# 
-# ----->!!! warning: this peace of code makes assumptions about tagset(no 'Z' occurs in a tag name)
-def set2str(d_set):
-  new_list=list(d_set)
-  #new_list.extend(d_set)
-  new_list.sort()
-
-  return 'Z'.join(new_list)  #might cause ambiguity in theory, but works OK with CTB tag set.
-
-
-#pattern_str2set=re.compile(('[A-Y]'))
-def str2set(d_str):
-  d_set=set()
-  S=''
-  for item in d_str:
-    if item=='Z':
-      d_set.add(S)
-      S=''
-
-    else:
-      S=S+item
-
-  if S:
-    d_set.add(str(S))
-
-  return d_set  
-    
-
-
-
-#decompose tags in the form  "tag_subscript"
-def decompose_tag(complex_tag):
-  match=pattern.match(complex_tag)
-
-  try:
-    match=pattern.match(complex_tag)
-    
-    tag=match.group(1)
-    subscript=match.group(2)
-
-    return tag, subscript
-
-  except:
-    print ('Error in tag format! The tag format is unrecognizable! e.g.',complex_tag)
-    return False
-
-#clean up error-handling later...
-
-
-  
 
 # a simple hashtable, value is a list of items
 class Hash_list_value:

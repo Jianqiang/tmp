@@ -8,6 +8,11 @@ import pickle
 from nltk import ParentedTree
 
 
+from utility_proj import set2str
+#from utility_proj import str2set
+
+
+
 print('\n>>>Running mini_tree_seq_gen.py, generates sentences that are sequences of mini-trees. Each tree represents the structure of a word.')
 
 
@@ -171,9 +176,24 @@ for i in list(Uncovered)[:min(20, len(Uncovered))]:
 # Do annotation for single-character word
 #
 
-print('\n\n\n>>>Generating word structure trees for single char character')
+print('\n\n\n>>>Generating word structure trees for single char character...')
+
 
 for single_char_word in SingleCharWord:
 
-  tag=Word2Tag[single_char_word]
-  tag_str=
+  tag_set=Word2Tag[single_char_word]
+  tag_str=set2str(tag_set)
+
+  tree_str='( '+tag_str+'_u '+single_char_word+' )'
+
+  tree=ParentedTree(tree_str)
+
+  index=len(NewForest)
+  NewForest.append(tree)
+
+  Word2treeID[single_char_word]=index
+
+print('done! Such trees have been appended to NewForest, and word2treeId mapping has been stored in Word2treeID hashtable.')
+  
+
+
