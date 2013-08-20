@@ -44,6 +44,8 @@ BI={'b','i'}
 
 
 def pre_proc(tokens):
+
+  #print('\n'+'--'.join(tokens))
   target=[]
   char_seq=[]
   check_stack=[]
@@ -111,6 +113,7 @@ def pre_proc(tokens):
 
     else:
       print ('Error! Unknown configuration  last/current/next is:', d_last, d_current, d_next)
+      break
 
 
   # proc last item in the tokens list
@@ -121,7 +124,7 @@ def pre_proc(tokens):
 
   else:
                 
-    print('Error! Check-stack is not emplty in the end!')
+    print('Error! Check-stack is not emplty in the end!', check_stack)
 
   #print('char_seq=', ''.join(char_seq))
   #print('new_line=', target, len(target))

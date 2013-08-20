@@ -476,7 +476,7 @@ for tree in NewForest:
 print('writting done!')
 f.close()
 
-print('\nStroing this new annotation (in tree format) via pickle, to ', path2)
+print('\nStroing this new annotation (in tree format) via pickle, to ', path2,'...')
 f=open(path2, 'wb')
 pickle.dump(NewForest, f)
 f.close()
@@ -484,7 +484,11 @@ print('done!')
 
 
 p3='../working_data/updated_Vec.pickle'
-print('\nStoring the update Vec hashtable (string-->set of tags) to ',p3)
+print('\nStoring the update Vec hashtable (string-->set of tags) to ',p3,'...')
+f=open(p3, 'wb')
+pickle.dump(UpdatedVec, f)
+f.close()
+print('done!')
         
         
       
