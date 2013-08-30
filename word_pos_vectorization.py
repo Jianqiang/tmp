@@ -101,7 +101,7 @@ def scan_corpus_build_hashtable(p):
 
       WordPOS2Freq.add_item(token)
 
-      match=re.search('(.+)_([A-Z]+)', token)  #<-----------------  this pattern matching depends on the concrete format of the corpus
+      match=re.search('(.+)_([A-Z]+)', token)  #<-----------------WARNING:  this pattern matching depends on the concrete format of the corpus
       try:
         word=match.group(1)
         tag=match.group(2)

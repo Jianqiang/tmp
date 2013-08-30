@@ -43,6 +43,9 @@ def str2set(d_str):
 
 #decompose tags in the form  "tag_subscript"
 def decompose_tag(complex_tag):
+
+  #pattern=re.compile('([A-Z]+)_([a-z]+)') # the pattern of tree nodes (tags), compiled, as will be called repeatedly
+
   match=pattern.match(complex_tag)
 
   try:
