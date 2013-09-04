@@ -14,7 +14,7 @@ import sys
 import pickle
 
 
-print('\n\n>>>Running X_write_annotation.py, which write annotation in PTB format as txt file')
+print('\n\n>>>Running Y_write_annotation.py, which write annotation in PTB format as txt file')
 print('Optional Argv: 1. proprocessed_word_structure_annotation,  2.word2tag mapping')
 
 path_annotation='../working_data/annotation_nltk.data'
@@ -71,7 +71,7 @@ for word in Word2NewTag:
 
     for tag in tag_set:
 
-      tree_string='( S ( '+tag+'_u  '+word+' ) )'
+      tree_string='( S ( '+tag+'_U  '+word+' ) )'
 
       AnnotationPTB.append(tree_string)
 

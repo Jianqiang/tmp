@@ -140,17 +140,22 @@ class TableBasedSegmenter():
 #
 # testing  ------------
 #
+print('\n\n>>>Testing Table based Segmenter...')
+print('Arg: 1. path_to_string2probTable (string2parseprob.pickle by default),  2.path_to_test_corpus(test.seg by default)')
 
 path_string2prob='string2parseprob.pickle'
 
+#corpus_path='/Users/jma/dropbox/code/LatentPoS/working_data/top100.seg'
+corpus_path='/Users/jma/dropbox/code/LatentPoS/working_data/test.seg'
 
+if len(sys.argv)>1:
+  path_string2prob=sys.argv[1]
+
+  if len(sys.argv)>2:
+    corpus_path=sys.argv[2]
 
 TSeg=TableBasedSegmenter(path_string2prob)
 
-#corpus_path='/Users/jma/dropbox/code/LatentPoS/working_data/top100.seg'
-corpus_path='/Users/jma/dropbox/code/LatentPoS/working_data/test.seg'
-if len(sys.argv)>1:
-  corpus_path=sys.argv[1]
 
 print('\n###Segmenting corpus', corpus_path, '...')
 

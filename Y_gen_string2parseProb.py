@@ -9,6 +9,7 @@ import pickle
 import math
 
 #(the log_sum_exp trick) given log probability, compute the log of the sum of the raw probabilities
+# log(e) or log(2), two configurations
 def log_sum_exp_log(list_of_log_probs):
 
   max_log_prob=-1e100
@@ -23,7 +24,9 @@ def log_sum_exp_log(list_of_log_probs):
 
   #print(new_list_of_log_probs)
 
-  log_sum_exp_log=max_log_prob+math.log(sum([math.e**log_prob  for log_prob in new_list_of_log_probs]))
+  #log_sum_exp_log=max_log_prob+math.log(sum([math.e**log_prob  for log_prob in new_list_of_log_probs]))
+  log_sum_exp_log=max_log_prob+math.log(sum([2**log_prob  for log_prob in new_list_of_log_probs]),2)
+
 
   return log_sum_exp_log
 
