@@ -118,6 +118,12 @@ for tree_string in AnnotationPTB:
 
   key=''.join(tree.leaves())+'_'+tree.node[:-2]
   counter= FreqTable[key] if key in FreqTable else 0
+
+#!!convert tags with subscript e.g. NN_i to a single tag NNi, as Stanford parser seems to remove subscript automatically
+  tokens=tree_string.split()
+  new_tokens=[i[:-2]+i[-1] if len(i)>1 and i[-2]=='_' else i for i in tokens]
+  tree_string=' '.join(new_tokens)
+  
   for i in range(counter):
     f.write('( S '+tree_string+' )\n')
 print('\n\nEverything done!')
