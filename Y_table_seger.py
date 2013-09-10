@@ -96,7 +96,10 @@ class TableBasedSegmenter():
     return final_seg           
 
 
-  def segment_corpus(self, corpus_path):
+    
+
+  
+  def segment_corpus(self, corpus_path, path_out):
 
     f=codecs.open(corpus_path, 'rU','utf-8')
     corpus=f.readlines()
@@ -120,9 +123,9 @@ class TableBasedSegmenter():
       Result.append(result)
       sent_count += 1
 
-    prefix=re.findall('[^/]+', corpus_path)
-    prefix_str='/'+'/'.join(prefix[:-1])
-    path_out=prefix_str+'/table_seg.out'
+    #prefix=re.findall('[^/]+', corpus_path)
+    #prefix_str='/'+'/'.join(prefix[:-1])
+    #path_out=prefix_str+'/table_seg.out'
     
 
     f3=codecs.open(path_out, 'w', 'utf-8')
@@ -141,7 +144,7 @@ class TableBasedSegmenter():
 # testing  ------------
 #
 print('\n\n>>>Testing Table based Segmenter...')
-print('Arg: 1. path_to_string2probTable (string2parseprob.pickle by default),  2.path_to_test_corpus(test.seg by default)')
+print('Arg: 1. path_to_string2probTable (string2parseprob.pickle by default),  2.path_to_test_corpus(test.seg by default), 3.path_to_segmentation_result (table_seg.out by default)')
 
 path_string2prob='string2parseprob.pickle'
 
@@ -159,5 +162,8 @@ TSeg=TableBasedSegmenter(path_string2prob)
 
 print('\n###Segmenting corpus', corpus_path, '...')
 
-TSeg.segment_corpus(corpus_path)
+path_out='./table_seg.out'
+if len(sys.argv)>3:
+  path_out=sys.argv[3]
+TSeg.segment_corpus(corpus_path, path_out)
 
