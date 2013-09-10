@@ -1,0 +1,14 @@
+Run Y_*.py in the following order to get the parser-based segmentation from the raw annotation of word structure
+
+1. Y_write_weighted_annotation.py or Y_write_annotation.py, which output the pre-processed annotation to plain txt file.  The weighted one is preferred, which for word-postag type occur write N trees, N=frequency of the (word, pos-tag) pair
+
+2. Training the stanford parser with the output above and parse the ngram up to length K for all the unique ngrams that will appear in the testing corpus.
+this may call uniq_ngram_gen.py to generate all the unique n-grams of the testing cropus
+
+3. Y_parser_prob_collector.py, which collect the log prob of top-n Viterbi parsing given by the stanford parser
+
+4. Y_gen_string2parseProb.py, use the output above and the original ngram file to generate a hashtable that maps a ngram to its log-probability.
+
+5. Y_table_seger.py, read the map from above, and initilaize a Viterbi segmenter, the score of each word candidate is from the above hash table. It then segment the corpus specified in this module and write the segmentation result
+
+
