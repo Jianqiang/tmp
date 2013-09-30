@@ -65,7 +65,7 @@ class FlatTreeGen():
   def gen_n_write_sent_flat_tree(self, path_to_out_annotation):
 
     print('\n>generating sent-level flat trees...')
-    self.annotation=[[' ( S ']+[' ( '+pos_tag+'POS  '+self.Word2Tree[word].pprint(margin=10000)+' ) ' for (word, pos_tag) in line ]+[' ) \n'] for line in self.pos_corpus]
+    self.annotation=[[' ( ( S ']+[' ( '+pos_tag+'POS  '+self.Word2Tree[word].pprint(margin=10000)+' ) ' for (word, pos_tag) in line ]+[' ) ) \n'] for line in self.pos_corpus]
 
     print('done!\n>writing the annotation to ', path_to_out_annotation)
     f=codecs.open(path_to_out_annotation, 'w', 'utf-8')
