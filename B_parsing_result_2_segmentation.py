@@ -1,19 +1,23 @@
 #
-# B_global_parsing_result_collector.py
+# B_parsing_result_2_segmentation.py
 #
 
 '''
-Collect the parsing results from the global constituent parsing model
+Collect the parsing results from the global constituent parsing model,
+and convert them to segmentation result
 
 '''
 
 import codecs
 import sys
+import os
 import pickle
 
 
+from B_convert_psd_sent_2_segmentation import convert_psd_sent_2_segmentation, convert_psd_sent_2_segmentation_2
 
-def parse_result_collector_gcp(parsing_result, result_pickle):
+
+def parse_result_collector_gcp(parsing_result):
 
   print('Collecting parsing result from ', parsing_result)
 
@@ -24,6 +28,7 @@ def parse_result_collector_gcp(parsing_result, result_pickle):
   
   f=codecs.open(parsing_result, 'rU','utf-8')
   lines=f.readlines()
+  f.close()
   counter=0
   max_count=len(lines)
   
@@ -66,18 +71,37 @@ def parse_result_collector_gcp(parsing_result, result_pickle):
   if top_k_parse:
     ParsedCorpus.append(top_k_parse)
 
-  f.close()
+  return ParsedCorpus
 
-  print ('\nWriting  collected parsing result to pickel file ', result_pickle)
-  f=open( result_pickle , 'wb')
-  pickle.dump(ParsedCorpus, f)
+  
+
+
   
 
 print('\nRunning global_parsing_result_collector')
 print('@Arg: 1. path_to_parser_output,  2. path_to_collector_result_pickle')
 
-parse_result_collector_gcp(sys.argv[1], sys.argv[2])
-      
+path_to_parser_output='../working_data/test.a1.10best.psd'
+path_to_collector_result_pickle='../working_data/pc.pickle'
+
+if len(sys.argv)>1:
+  path_to_parser_output=sys.argv[1]
+#path_to_collector_result_pickle=sys.argv[2]
+
+parsed_corpus=parse_result_collector_gcp(path_to_parser_output)
+
+#print ('\nWriting  collected parsing result to pickel file ', result_pickle)
+#f=open( result_pickle , 'wb')
+#pickle.dump(ParsedCorpus, f)
+
+SegCorpus=convert_psd_sent_2_segmentation(parsed_corpus)
+
+path_output='/'.join(os.path.realpath(path_to_parser_output).split('/')[:-1])+'/'+path_to_parser_output.split('/')[-1][:-3]+'seg'
+
+print('\nWriting segmentation result to', path_output)
+f=codecs.open(path_output,'w','utf-8')
+for seg in SegCorpus:
+  f.write(' '.join(seg)+'\n')
 
 
 
