@@ -76,9 +76,9 @@ class FlatTreeGen():
   
 
 #test..
-p_dev='../working_data/dev.ctb5.pos'
-p_test='../working_data/test.ctb5.pos'
-p_train='../working_data/train.ctb5.pos'
+p_dev='../working_data/dev.ctb5.pos.split'  # added .split, to use the splitted version
+p_test='../working_data/test.ctb5.pos.split'
+p_train='../working_data/train.ctb5.pos.split'
 
 p_annotation1='../working_data/word_str_annotation1.txt'
 p_annotation2='../working_data/word_str_annotation2.txt'
@@ -108,7 +108,7 @@ def flat_treebank_gen(p_annotations, p_corpora, trait, prefix):
       identity=trait[i]
 
       FTG.read_posCorpus(corpus)
-      FTG.gen_n_write_sent_flat_tree(prefix+identity+'.a'+str(x+1)+'.gcp.txt')
+      FTG.gen_n_write_sent_flat_tree(prefix+identity+'.a'+str(x+1)+'.gcp.txt.split')  #!!! added .split suffix
 
     
 flat_treebank_gen(path_annotations, path_corpora, trait, prefix)

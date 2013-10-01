@@ -14,7 +14,7 @@ import os
 import pickle
 
 
-from B_convert_psd_sent_2_segmentation import convert_psd_sent_2_segmentation, convert_psd_sent_2_segmentation_2
+from psd_sent_2_seg import convert_psd_sent_2_segmentation, convert_psd_sent_2_segmentation_2
 
 
 def parse_result_collector_gcp(parsing_result):
@@ -73,31 +73,25 @@ def parse_result_collector_gcp(parsing_result):
 
   return ParsedCorpus
 
-  
-
 
   
+#### Running the script ####
 
 print('\nRunning global_parsing_result_collector')
-print('@Arg: 1. path_to_parser_output,  2. path_to_collector_result_pickle')
+print('@Arg: 1. path_to_parser_output')
 
 path_to_parser_output='../working_data/test.a1.10best.psd'
 path_to_collector_result_pickle='../working_data/pc.pickle'
 
 if len(sys.argv)>1:
   path_to_parser_output=sys.argv[1]
-#path_to_collector_result_pickle=sys.argv[2]
+
 
 parsed_corpus=parse_result_collector_gcp(path_to_parser_output)
-
-#print ('\nWriting  collected parsing result to pickel file ', result_pickle)
-#f=open( result_pickle , 'wb')
-#pickle.dump(ParsedCorpus, f)
 
 SegCorpus=convert_psd_sent_2_segmentation(parsed_corpus)
 
 path_output='/'.join(os.path.realpath(path_to_parser_output).split('/')[:-1])+'/'+path_to_parser_output.split('/')[-1][:-3]+'seg'
-
 print('\nWriting segmentation result to', path_output)
 f=codecs.open(path_output,'w','utf-8')
 for seg in SegCorpus:

@@ -43,9 +43,9 @@ def file_split(path_to_original_corpus, num_of_splits):
   
 
 
-def parallelization_jobs( model, input_corpus, parsed_corpus):
+def parallelization_parse( model, input_corpus, parsed_corpus):
   #model, input_corpus, parsed_corpus= the_argv
-  cmd='java -mx5g -cp "stanford-parser.jar" edu.stanford.nlp.parser.lexparser.LexicalizedParser  -printPCFGkBest 10 -sentences newline '
+  cmd='java -mx8g -cp "stanford-parser.jar" edu.stanford.nlp.parser.lexparser.LexicalizedParser  -printPCFGkBest 10 -sentences newline '
   cmd += model+' '+input_corpus+' > '+parsed_corpus
   os.system(cmd)
 
@@ -57,30 +57,44 @@ if __name__=='__main__':
   print('\nrunning parallel command line Stanford Parser task...')
   print('@Arg: 1. model 2. corpus_to_be_parsed, 3.number_of_splits')
 
-  #start=time.clock()
   start=time.mktime(time.localtime())
 
+  #input
   path_to_model=os.path.realpath(sys.argv[1])
   path_to_corpus_to_be_parsed=sys.argv[2]
   num_of_splits=int(sys.argv[3])
 
+  #split input corpus and get names of subcorpora
   list_subcorpus_names=file_split(path_to_corpus_to_be_parsed, num_of_splits)
+
+  #gen arguments for the function
   argv_list=[(path_to_model, path_input_corpus, path_input_corpus+'.subpsd') for path_input_corpus in list_subcorpus_names]
-  
+
+  #
+  # >> call running-parser function in parallel
   proc=[]
   print('\nRunning parallel parsing tasks...')
   for i, the_argv in enumerate(argv_list):
-    #print(the_argv)
     print('#Initializing proc',i)
-    p=Process(target=parallelization_jobs, args=the_argv)
+    p=Process(target=parallelization_parse, args=the_argv)
     p.start()
     proc.append(p)
 
   for p in proc:
-    #print('join...')
     p.join()
 
-  #elapsed=(time.clock() - start)
+  #merge the results
+  real_path=os.path.realpath(path_to_corpus_to_be_parsed)
+  prefix='/'+'/'.join(real_path.split('/')[:-1])
+  suffix='/'+real_path.split('/')[-1]+'.psd'
+  target=prefix+suffix
+
+  print('\nMerging parsing result to file', target )
+  os.system("cat "+" ".join([path_input_corpus+'.subpsd' for path_input_corpus in list_subcorpus_names])+" > " +target)
+
+  print('And removing temp splitted files...')
+  os.system("rm "+" ".join([path_input_corpus+'.subpsd' for path_input_corpus in list_subcorpus_names])+"  "+"  ".join(list_subcorpus_names))
+  
   elapsed=time.mktime(time.localtime())-start
   print('\n>>>All the jobs are done!')
   print('time elapsed:', elapsed, 'seconds')
