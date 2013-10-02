@@ -78,7 +78,7 @@ def parse_result_collector_gcp(parsing_result):
 #### Running the script ####
 
 print('\nRunning global_parsing_result_collector')
-print('@Arg: 1. path_to_parser_output')
+print('@Arg: 1. path_to_parser_output, 2.(optional) path_to_segmentation_result')
 
 path_to_parser_output='../working_data/test.a1.10best.psd'
 path_to_collector_result_pickle='../working_data/pc.pickle'
@@ -91,7 +91,11 @@ parsed_corpus=parse_result_collector_gcp(path_to_parser_output)
 
 SegCorpus=convert_psd_sent_2_segmentation(parsed_corpus)
 
+
 path_output='/'.join(os.path.realpath(path_to_parser_output).split('/')[:-1])+'/'+path_to_parser_output.split('/')[-1][:-3]+'seg'
+if len(sys.argv)>2:
+  path_out=sys.argv[2]
+
 print('\nWriting segmentation result to', path_output)
 f=codecs.open(path_output,'w','utf-8')
 for seg in SegCorpus:

@@ -43,58 +43,87 @@ def file_split(path_to_original_corpus, num_of_splits):
   
 
 
-def parallelization_parse( model, input_corpus, parsed_corpus):
+def parallelization_parse( model, input_corpus, parsed_corpus, max_mem):
   #model, input_corpus, parsed_corpus= the_argv
-  cmd='java -mx8g -cp "stanford-parser.jar" edu.stanford.nlp.parser.lexparser.LexicalizedParser  -printPCFGkBest 10 -sentences newline '
+  cmd='java -mx'+max_mem+' -cp "stanford-parser.jar" edu.stanford.nlp.parser.lexparser.LexicalizedParser  -printPCFGkBest 10 -sentences newline '
   cmd += model+' '+input_corpus+' > '+parsed_corpus
   os.system(cmd)
 
 
-
+def get_file_names(path_to_name_file):
+  f=codecs.open(path_to_name_file,'rU','utf-8')
+  file_set=[line.strip() for line in f.readlines()]
+  return file_set
 
 
 if __name__=='__main__':
   print('\nrunning parallel command line Stanford Parser task...')
-  print('@Arg: 1. model 2. corpus_to_be_parsed, 3.number_of_splits')
+  print('@Arg: 1. model_name_file 2. corpus_to_be_parsed, 3.number_of_splits, 4.max_memory_per_process (e.g. 4g)')
 
-  start=time.mktime(time.localtime())
+  very_start=time.mktime(time.localtime())
 
   #input
-  path_to_model=os.path.realpath(sys.argv[1])
+  path_to_model_name_file=os.path.realpath(sys.argv[1])
   path_to_corpus_to_be_parsed=sys.argv[2]
   num_of_splits=int(sys.argv[3])
+  max_mem=sys.argv[4]
+
+  #get the set of available models
+  model_set=get_file_names(path_to_model_name_file)
+
 
   #split input corpus and get names of subcorpora
   list_subcorpus_names=file_split(path_to_corpus_to_be_parsed, num_of_splits)
 
-  #gen arguments for the function
-  argv_list=[(path_to_model, path_input_corpus, path_input_corpus+'.subpsd') for path_input_corpus in list_subcorpus_names]
 
-  #
-  # >> call running-parser function in parallel
-  proc=[]
-  print('\nRunning parallel parsing tasks...')
-  for i, the_argv in enumerate(argv_list):
-    print('#Initializing proc',i)
-    p=Process(target=parallelization_parse, args=the_argv)
-    p.start()
-    proc.append(p)
+  #######################################################
+  # for different models, we parse *sequentially*,      #  
+  # for the corpus, we split and parse *in parallel*    #
+  #######################################################
 
-  for p in proc:
-    p.join()
+  for path_to_model in model_set:
+    
+      start=time.mktime(time.localtime())
 
-  #merge the results
-  real_path=os.path.realpath(path_to_corpus_to_be_parsed)
-  prefix='/'+'/'.join(real_path.split('/')[:-1])
-  suffix='/'+real_path.split('/')[-1]+'.psd'
-  target=prefix+suffix
+      print('\n\n\n\n\n\n\##############################')
+      print('>>>Parsing with model:',path_to_model.split('/')[-1])
 
-  print('\nMerging parsing result to file', target )
-  os.system("cat "+" ".join([path_input_corpus+'.subpsd' for path_input_corpus in list_subcorpus_names])+" > " +target)
+      psd_corpus_list=[path_input_corpus+'_BY_'+path_to_model.split('/')[-1]+'.subpsd' for path_input_corpus in list_subcorpus_names]   
+      #gen arguments for the function
+      argv_list=[(path_to_model, path_input_corpus, path_input_corpus+'_BY_'+path_to_model.split('/')[-1]+'.subpsd', max_mem) for path_input_corpus in list_subcorpus_names]
 
+      #
+      # >> call running-parser function in parallel
+      proc=[]
+      print('\nRunning parallel parsing tasks...')
+      for i, the_argv in enumerate(argv_list):
+        print('#Initializing proc',i)
+        p=Process(target=parallelization_parse, args=the_argv)
+        p.start()
+        proc.append(p)
+
+      for p in proc:
+        p.join()
+
+      #merge the results   
+      real_path=os.path.realpath(path_to_corpus_to_be_parsed)
+      prefix='/'+'/'.join(real_path.split('/')[:-1])
+      model_signature=(os.path.realpath(path_to_model).split('/')[-1])
+      suffix=real_path.split('/')[-1]+'.psd'
+      target=prefix+'/'+model_signature+'_'+suffix
+
+      print('\nMerging parsing result to file', target )
+      os.system("cat "+" ".join(psd_corpus_list)+" > " +target)
+      os.system("rm "+" ".join(psd_corpus_list))
+      
+      elapsed=time.mktime(time.localtime())-start
+      print('\n>>>Jobs are done for current model ',path_to_model.split('/')[-1])
+      print('time elapsed for parsing with current model:', elapsed, 'seconds')
+
+  print('\n\n\n>>>===== ALL Parsing Tasks done for ALL the models!')
   print('And removing temp splitted files...')
-  os.system("rm "+" ".join([path_input_corpus+'.subpsd' for path_input_corpus in list_subcorpus_names])+"  "+"  ".join(list_subcorpus_names))
-  
-  elapsed=time.mktime(time.localtime())-start
-  print('\n>>>All the jobs are done!')
-  print('time elapsed:', elapsed, 'seconds')
+  os.system("rm "+"  ".join(list_subcorpus_names))
+
+  elapsed=time.mktime(time.localtime())-very_start
+  print('\nTotal Time in This Run')
+  print(elapsed, 'seconds')      
