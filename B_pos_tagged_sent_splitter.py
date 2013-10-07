@@ -23,17 +23,27 @@ input_corpus=sys.argv[1]
 output_corpus=sys.argv[2]
 
 splitted_corpus=[]
-puctuations={'，','；','、','。','（','）','《', '》','“','”'}
+#punctuations={'，','；','、','。','（','）','《', '》','“','”'}
+punctuations={'，','；','、','。','（','）'} #only use the basic  punctuations
 
 print('reading input corpus from', input_corpus)
 f=codecs.open(input_corpus,'rU','utf-8')
+
+longest_chunk=(0,'')
+old_longest_sent=0
 for line in f.readlines():
   sent=[]
   chunk=[]
   for token in line.split():
-    if pos_pattern.match(token).group(1) in puctuations:
+    if len(line.split())>old_longest_sent:
+      old_longest_sent=len(line.split())
+      
+    if pos_pattern.match(token).group(1) in punctuations:
       chunk.append(token)
       sent.append(' '.join(chunk))
+      
+      if len(chunk)>longest_chunk[0]:
+        longest_chunk=(len(chunk),' '.join(chunk))
       chunk=[]
       #chunk=[char] #duplicate the punctuation
 
@@ -42,15 +52,25 @@ for line in f.readlines():
 
   if len(chunk)>0:
     sent.append(' '.join(chunk))
-  
+    if len(chunk)>longest_chunk[0]:
+      longest_chunk=(len(chunk),' '.join(chunk))
+
   splitted_corpus.append(sent)
 
 f.close()
-
 print('writing output corpus to', output_corpus)
 f=codecs.open(output_corpus, 'w','utf-8')
+count=0
+count_old=0
 for sent in splitted_corpus:
+  count_old += 1
   for chunk_str in sent:
     f.write(chunk_str.strip()+'\n')
+    count += 1
 f.close()
+
+
+print('\nThere are',count, 'splitted setences (original sent count=',count_old,') ratio=',count/count_old)
+print('\nAnd the longest splitted sent:',longest_chunk[1],'\nlength=',longest_chunk[0])
+print('\nLongest original sent, length=', old_longest_sent)
 print('done!')

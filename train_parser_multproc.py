@@ -20,8 +20,8 @@ def do_training( parameter_str, training_corpus, max_mem):
 
   grammar_file=prefix+'/'+'G_'+corpus_name+'_'+''.join(parameter_str.split()).replace('-','')+'.ser.gz'
   
-  
-  cmd='java -server -mx'+max_mem+ ' -cp  stanford-parser.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser  -encoding UTF-8 -headFinder edu.stanford.nlp.trees.LeftHeadFinder '
+  # Oct 7 Monday removal of "-headFinder edu.stanford.nlp.trees.LeftHeadFinder "
+  cmd='java -server -mx'+max_mem+ ' -cp  stanford-parser.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser  -encoding UTF-8 -escaper edu.stanford.nlp.trees.international.pennchinese.ChineseEscaper '
   cmd += parameter_str+' -saveToSerializedFile '+grammar_file+' -train '+training_corpus
   os.system(cmd)
 

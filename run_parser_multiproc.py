@@ -121,6 +121,7 @@ if __name__=='__main__':
       print('time elapsed for parsing with current model:', elapsed, 'seconds')
 
   print('\n\n\n>>>===== ALL Parsing Tasks done for ALL the models!')
+  print('Models used:,','  '.join(model_set))
   print('And removing temp splitted files...')
   os.system("rm "+"  ".join(list_subcorpus_names))
 

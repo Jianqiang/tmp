@@ -5,7 +5,7 @@
 import os
 import sys
 from multiprocessing import Process
-import codecs
+#import codecs
 
 
 def evaluate(path_to_score, path_to_dict, path_to_gold, path_to_segment_result):
@@ -13,8 +13,12 @@ def evaluate(path_to_score, path_to_dict, path_to_gold, path_to_segment_result):
 
 
 def parse_evaluation_result(path_to_evaluation_result):
-    f=codecs.open(path_to_evaluation_result, 'rU','utf-8')
-    last_line_tokens=f.readlines()[-1].split()
+    #f=codecs.open(path_to_evaluation_result, 'rU','utf-8')
+    f=open(path_to_evaluation_result, 'r')
+    lines=f.readlines()
+    d_str=lines[-1]
+    last_line_tokens=d_str.split()
+    #last_line_tokens=f.readlines()[-1].split()
     if last_line_tokens[0]=='###' and len(last_line_tokens)==14:
         recall, precision,f_score,oov_rate,oov_recall,iv_recall=[float(i) for i in last_line_tokens[-6:]]
         return recall, precision,f_score,oov_rate,oov_recall,iv_recall
@@ -29,12 +33,12 @@ if __name__=='__main__':
 
     print('\nRunning batch_evaluation... \nCollect all the call "score" utility to evaluate all the *.seg file'+
           '\n& generating *.eval files to keep the result; and then finally to gen a *.summary to figure out the best result'+
-          '\nArg: 1.directory/path_to_.seg_files  2. path_to_score_function, 3.path_to_dictionary, 4_path_to_goldstandard'+
+          '\n\n@Arg: 1.directory/path_to_.seg_files  2. path_to_score_function, 3.path_to_dictionary, 4_path_to_goldstandard'+
           '\note: ./score is in the same dir of this script by default')
 
 
     #step1
-    print('>>collect all *.seg file...')
+    print('>>collect all *.seg files...')
     d_dir=os.path.realpath(sys.argv[1])
     path_to_score=sys.argv[2]
     path_to_dict=sys.argv[3]
@@ -55,19 +59,27 @@ if __name__=='__main__':
     for p in proc:
         p.join()
 
+    print('>> writing the filename+f-score to summary.txt', 'in',d_dir) #python3 seems to have problems decode *.eval file, we use shell instead
+    os.system("cd "+d_dir)
+    os.system(" tail -1 *.eval |  grep '###' | sort -k11n | awk '{print  $2 "+ ' "\tF-score=" '+" $11}' > tmp.txt ")
+    os.system("tail -r tmp.txt >summary.txt")
 
-
+'''
     #step3
     print('>>generating .summary file to report the result')
-    files=[f for f in os.listdir(d_dir) if os.path.isfile(f) and f[-4:]=='.eval']
+    files=[f for f in os.listdir(d_dir) if os.path.isfile(f) and f[-5:]=='.eval']
     results=[]
     for eval_result in files:
-        results.append((eval_result, parse_evaluation_result(eval_result)))
+        #print((eval_result, parse_evaluation_result(eval_result)))
+        tmp_list=[eval_result]
+        tmp_list.extend([i for i in parse_evaluation_result(eval_result)])
+        results.append(tuple(tmp_list) )
 
     results.sort(key=lambda x:x[3], reverse=True)
 
-    path_summary=d_list+'/'+'eval.summary'
-    f=codecs.open(path_summary, 'w','utf-8')
+
+    path_summary=d_dir+'/'+'eval.summary'
+    f=open(path_summary, 'w')
 
     print('\n=======Results summary========\nalso saved in ', path_summary)
     print('format: name, recall, precision,f_score,oov_rate,oov_recall,iv_recall')
@@ -79,7 +91,7 @@ if __name__=='__main__':
         print('\n')
         f.write('\n')            
 
-    
+'''    
     
     
 

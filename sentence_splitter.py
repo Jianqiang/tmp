@@ -17,7 +17,9 @@ input_corpus=sys.argv[1]
 output_corpus=sys.argv[2]
 
 splitted_corpus=[]
-puctuations={'，','；','、','。','（','）','《', '》','“','”'}
+#puctuations={'，','；','、','。','（','）','《', '》','“','”'}
+#puctuations={'，','；','、','。','（','）','《', '》'}
+puctuations={'，','；','、','。','（','）'} #only use basic punctuations
 
 print('reading input corpus from', input_corpus)
 f=codecs.open(input_corpus,'rU','utf-8')

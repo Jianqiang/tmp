@@ -1,29 +1,26 @@
 #
-# refined_word_structure_annotation_gen.py
+# 6_refined_word_structure_gen_zpar.py
 #
 
+'''
+Similiar to refined_word_structure_annotation_gen, except that the tree format is
+Zpar style; and the output is directly word to tree_string (rather than tree)
+
+hint: removal of '_' between tag ans subscript (b/i/c/l/r),
+seems from paper, c --> l
+
+seems from word-structure.txt, that:
+c, b, i, (maybe also u)  ==> whitespace;
+l,r ==>join to the category
+
+But confusingly, the train.txt example file shows that ALL subscripts are seperated with whilte spaces
+we make c,u --> l; makes only l, r, b, i left, and substitute '-' with whitspace, which
+seems to be the encoding from their
+
+===> go for this option at this moment
 
 '''
-some code are duplicated from 4_mini_tree_seq_gen.py, as that one is likely to be less
-useful, and this code is meant to be gen the alternative output (pure word-structure annotation),
-which is supposed to be more useful
 
-1. check duplication, i.e. for each word type, whether there are more than 1 annotated trees, if so, choose one.
-
-2. check whether there is any word type  (len>1) that has no annotation.  Word list can be gen from ../working_data/word2newtag.pickle , which is one output of 2a_gen_tag_set_for_word_type.py
-
-3. gen single character word derivation, i.e.  T_u --> char, where subscript 'u' indicates unary derivation.
-
-Need a hashtable  String2Tree to keep the full annotation of each word, including subscripts. In the mini-tree sequence generation, i.e. the process of substituting each word token with its annotated tree for each sentence in the corpus, we can dynamically generate 3 version:
-
-1.  keep all the subscripts       Corpus1
-2. remove all the subscripts     Corpus2
-3. remove the c/r/l  subscripts while keeping b/i subscripts  Corpus3
-
-Then write them as PTB style bracketed txt file
-
-
-'''
 import re
 import pickle
 import sys
@@ -220,8 +217,8 @@ for single_char_word in SingleCharWord:
 
   tag_str=set2str(tag_set)
 
-  tree_str='( '+tag_str+'_u '+single_char_word+' )' # revers to old version of discarding extra unary rule on Oct. 5 ---
-  #tree_str=' (   '+tag_str+'_u '+' ( '+tag_str+'_b '+single_char_word+' ) ) '  #<-------- XXX  Change on Oct. 4------
+  #tree_str='( '+tag_str+'_b '+single_char_word+' )' # revers to old version of discarding extra unary rule on Oct. 5 ---
+  tree_str=' (   '+tag_str+'_l '+' ( '+tag_str+'_b '+single_char_word+' ) ) '  ##<-------- XXX  Change on Oct. 7, only use l/b, and discard 'u' tag------
 
   tree=ParentedTree(tree_str)
 
@@ -293,6 +290,9 @@ print('\nGenerating three vesions of word-structure annotation...')
 
 count=0
 
+def c2l(d_str):
+  return 'l' if d_str=='c' else d_str
+
 for word in Word2treeID:
 
   index=Word2treeID[word]
@@ -302,23 +302,27 @@ for word in Word2treeID:
   tree_str2=remove_all_subscript(tree).pprint(margin=10000)
   tree_str3=remove_crl_subscript(tree).pprint(margin=10000)
 
-# removing '_' between tag and subtag, as Stanford parser will remove the subtag when seeing '_'
+#
+# substituting '_' between tag and subtag, into white spaces, !!! ### diff from refined_word_structure_gen
+#
+
+  new_tree_str1=' '.join([i[:-2]+' '+c2l(i[-1]) if len(i)>1 and i[-2]=='_' else i for i in tree_str1.split()]) # remove '_' to merge subscript to merge it to the non-terminal
+  new_tree_str2=tree_str2
+  new_tree_str3=' '.join([i[:-2]+' '+c2l(i[-1]) if len(i)>1 and i[-2]=='_' else i for i in tree_str3.split()]) # remove '_' to merge subscript to merge    Annotation1.append((new_tree_str1, counter))
+
+  
 
 
-  new_tree_str1=' '.join([i[:-2]+i[-1] if len(i)>1 and i[-2]=='_' else i for i in tree_str1.split()]) # remove '_' to merge subscript to merge it to the non-terminal
-  new_tree_str2=tree_str2 # tree_str2 have already remove all the subscripts
-  new_tree_str3=' '.join([i[:-2]+i[-1] if len(i)>1 and i[-2]=='_' else i for i in tree_str3.split()]) # remove '_' to merge subscript to merge    Annotation1.append((new_tree_str1, counter))
-
-  Corpus1.append(new_tree_str1)
-  Corpus2.append(new_tree_str2)
-  Corpus3.append(new_tree_str3)
+  Corpus1.append(''.join(tree.leaves())+'  '+new_tree_str1)
+  Corpus2.append(''.join(tree.leaves())+'  '+new_tree_str2)
+  Corpus3.append(''.join(tree.leaves())+'  '+new_tree_str3)
 
 print('\ndone!')
     
 
-p2='../working_data/word_str_annotation1.txt'
-p3='../working_data/word_str_annotation2.txt'
-p4='../working_data/word_str_annotation3.txt'
+p2='../working_data/word_str_annotation1.zpar'
+p3='../working_data/word_str_annotation2.zpar'
+p4='../working_data/word_str_annotation3.zpar'
 
 if len(sys.argv)>4:
   p2=sys.argv[2]
