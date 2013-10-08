@@ -97,10 +97,18 @@ prefix='../working_data/'
 
 #trait=['train','test','dev']
 #path_corpora=[p_train, p_test, p_dev]
-trait=['train']
-path_corpora=[p_train]  #---> change on Oct. 4, it seems only necessary to gen sent-level tree for the trainign corpus
+trait=['raw.train']
 
+flag_split=False
+
+if flag_split:
+  p_train='../working_data/train.ctb5.pos.split.new'
+  trait=['split.train']
+
+path_corpora=[p_train]  #---> change on Oct. 4, it seems only necessary to gen sent-level tree for the trainign corpus
 path_annotations=[p_annotation1, p_annotation2, p_annotation3]
+
+
 
 def flat_treebank_gen(p_annotations, p_corpora, trait, prefix):
 
@@ -119,7 +127,7 @@ def flat_treebank_gen(p_annotations, p_corpora, trait, prefix):
       identity=trait[i]
 
       FTG.read_posCorpus(corpus)
-      FTG.gen_n_write_sent_flat_tree(prefix+identity+'.a'+str(x+1)+'.raw.treebank')  
+      FTG.gen_n_write_sent_flat_tree(prefix+identity+'.a'+str(x+1)+'.treebank')  
     
 flat_treebank_gen(path_annotations, path_corpora, trait, prefix)
 

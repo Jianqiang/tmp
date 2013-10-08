@@ -297,25 +297,23 @@ for word in Word2treeID:
 
   index=Word2treeID[word]
   tree=NewForest[index]
-
+  
   tree_str1=tree.pprint(margin=10000)
   tree_str2=remove_all_subscript(tree).pprint(margin=10000)
   tree_str3=remove_crl_subscript(tree).pprint(margin=10000)
 
 #
-# substituting '_' between tag and subtag, into white spaces, !!! ### diff from refined_word_structure_gen
+# blocking substituting '_' between tag and subtag, into white spaces, !!! ### diff from refined_word_structure_gen
 #
 
-  new_tree_str1=' '.join([i[:-2]+' '+c2l(i[-1]) if len(i)>1 and i[-2]=='_' else i for i in tree_str1.split()]) # remove '_' to merge subscript to merge it to the non-terminal
-  new_tree_str2=tree_str2
-  new_tree_str3=' '.join([i[:-2]+' '+c2l(i[-1]) if len(i)>1 and i[-2]=='_' else i for i in tree_str3.split()]) # remove '_' to merge subscript to merge    Annotation1.append((new_tree_str1, counter))
+  #new_tree_str1=' '.join([i[:-2]+' '+c2l(i[-1]) if len(i)>1 and i[-2]=='_' else i for i in tree_str1.split()]) # remove '_' to merge subscript to merge it to the non-terminal
+  #new_tree_str2=tree_str2
+  #new_tree_str3=' '.join([i[:-2]+' '+c2l(i[-1]) if len(i)>1 and i[-2]=='_' else i for i in tree_str3.split()]) # remove '_' to merge subscript to merge    Annotation1.append((new_tree_str1, counter))
 
   
-
-
-  Corpus1.append(''.join(tree.leaves())+'  '+new_tree_str1)
-  Corpus2.append(''.join(tree.leaves())+'  '+new_tree_str2)
-  Corpus3.append(''.join(tree.leaves())+'  '+new_tree_str3)
+  Corpus1.append(''.join(tree.leaves())+'  '+tree_str1)
+  Corpus2.append(''.join(tree.leaves())+'  '+tree_str2)
+  Corpus3.append(''.join(tree.leaves())+'  '+tree_str3)
 
 print('\ndone!')
     
@@ -334,7 +332,7 @@ print('\n\nWriting corpus1/2/3 to ',p2,p3,p4, 'respectively')
 
 def write_mst_corpus(Corpus, file):
 
-  f=codecs.open(file,'w','utf-8')
+  f=codecs.open(file,'w','gb2312')
   for sent in Corpus:
     f.write(sent+'\n')
   print(file, ' written: done!')
